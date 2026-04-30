@@ -830,84 +830,129 @@ function setFormStatus(html,color){
 
 // ── SEARCH RECORD ──
 async function searchRecord() {
-  const docno = document.getElementById('s-docno').value.trim();
-  const st    = document.getElementById('s-station').value;
-  const pn    = document.getElementById('s-pump').value;
-  const status= document.getElementById('search-status');
+  const docno  = document.getElementById('s-docno').value.trim();
+  const st     = document.getElementById('s-station').value;
+  const pn     = document.getElementById('s-pump').value;
+  const status = document.getElementById('search-status');
 
-  let searchDocNo = docno;
-  if(!searchDocNo && st && pn) {
-    // ค้นหาจาก station+pump → เอา record ล่าสุด
-    await loadAllRecords();
-    const matches=allRecords.filter(r=>r['สถานที่']===st&&String(r['หมายเลข'])===String(pn));
-    if(!matches.length){status.textContent='❌ ไม่พบข้อมูลของเครื่องนี้';status.style.color='var(--red)';return;}
-    // เรียงตาม DocNo ล่าสุด
-    matches.sort((a,b)=>String(b['เลขที่เอกสาร']).localeCompare(String(a['เลขที่เอกสาร'])));
-    searchDocNo=String(matches[0]['เลขที่เอกสาร']);
-  }
-  if(!searchDocNo){status.textContent='กรุณาระบุเลขที่เอกสาร หรือ เลือก Station + หมายเลข';status.style.color='var(--amber)';return;}
+  status.textContent='กำลังค้นหา...'; status.style.color='var(--text3)';
+  await loadAllRecords(true); // force reload
 
-  status.textContent='กำลังค้นหา...';status.style.color='var(--text3)';
-  try {
-    const res=await fetch(GAS_URL+'?action=get_record&docNo='+encodeURIComponent(searchDocNo)+'&_='+Date.now());
-    const json=await res.json();
-    if(json.status!=='ok'){status.textContent='❌ '+json.message;status.style.color='var(--red)';return;}
-    fillForm(json.data);
-    status.textContent='✅ โหลดข้อมูล '+searchDocNo+' สำเร็จ — อยู่ในโหมดแก้ไข';
+  // ค้นหาจากเลขที่เอกสาร
+  if(docno) {
+    const found = allRecords.find(r=>String(r['เลขที่เอกสาร'])===docno);
+    if(!found){status.innerHTML='&#10060; ไม่พบเลขที่เอกสาร: '+docno;status.style.color='var(--red)';return;}
+    fillForm(found);
+    status.innerHTML='&#9989; โหลด <strong>'+docno+'</strong> สำเร็จ';
     status.style.color='var(--green)';
-  } catch(e){status.textContent='❌ เชื่อมต่อ Server ไม่สำเร็จ';status.style.color='var(--red)';}
+    return;
+  }
+
+  // ค้นหาจาก station + pump
+  if(st && pn) {
+    const matches = allRecords.filter(r=>
+      r['สถานที่']===st && String(r['หมายเลข'])===String(pn)
+    );
+    if(!matches.length){status.innerHTML='&#10060; ไม่พบข้อมูลของเครื่องนี้';status.style.color='var(--red)';return;}
+
+    if(matches.length===1) {
+      fillForm(matches[0]);
+      status.innerHTML='&#9989; โหลด <strong>'+matches[0]['เลขที่เอกสาร']+'</strong> สำเร็จ';
+      status.style.color='var(--green)';
+      return;
+    }
+
+    // มีหลายรายการ → แสดง list ให้เลือก
+    matches.sort((a,b)=>String(b['เลขที่เอกสาร']).localeCompare(String(a['เลขที่เอกสาร'])));
+    const listHtml = matches.map(r=>{
+      const dt=r['วันที่']?new Date(r['วันที่']).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'}):'—';
+      const jd=r['สรุปผล']||'—';
+      const jcl=jd==='Acceptable'?'b-ok':jd==='Not Acceptable'?'b-ng':'b-st';
+      const ba=r['Before or After']||'—';
+      const bcl=ba==='Before'?'b-bef':ba==='After'?'b-aft':'';
+      return '<div onclick="selectSearchResult(\''+r['เลขที่เอกสาร']+'\')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:#fff;transition:background .15s" onmouseover="this.style.background=\'var(--blue3)\'" onmouseout="this.style.background=\'#fff\'">'
+        +'<span style="font-family:var(--mono);font-size:12px;color:var(--blue2);font-weight:600;flex:1">'+r['เลขที่เอกสาร']+'</span>'
+        +'<span style="font-size:11px;color:var(--text3)">'+dt+'</span>'
+        +'<span class="badge '+bcl+'" style="flex-shrink:0">'+ba+'</span>'
+        +'<span class="badge '+jcl+'" style="flex-shrink:0">'+jd+'</span>'
+        +'</div>';
+    }).join('');
+    status.innerHTML='<div style="margin-bottom:8px;font-weight:600;color:var(--amber)">&#9888; พบ '+matches.length+' รายการ — กรุณาเลือก</div>'
+      +'<div style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto">'+listHtml+'</div>';
+    status.style.color='var(--text)';
+    return;
+  }
+
+  status.textContent='กรุณาระบุเลขที่เอกสาร หรือ เลือก Station + หมายเลข';
+  status.style.color='var(--amber)';
+}
+
+async function selectSearchResult(docNo) {
+  const status=document.getElementById('search-status');
+  const found=allRecords.find(r=>String(r['เลขที่เอกสาร'])===String(docNo));
+  if(!found){status.innerHTML='&#10060; ไม่พบข้อมูล';status.style.color='var(--red)';return;}
+  fillForm(found);
+  status.innerHTML='&#9989; โหลด <strong>'+docNo+'</strong> สำเร็จ';
+  status.style.color='var(--green)';
 }
 
 function fillForm(r) {
+  // unlock ก่อน เพื่อให้ set ค่าได้
+  document.querySelectorAll('#page-form input:not(#f-inspector-name), #page-form select').forEach(el=>{
+    el.disabled=false;
+  });
+  document.querySelectorAll('#page-form input[type=radio]').forEach(el=>el.disabled=false);
+
   editMode=true;
   editDocNo=String(r['เลขที่เอกสาร']||'');
-  document.getElementById('docno-box').textContent=editDocNo;
 
-  // หา selectedEquip
+  // set station → pump
   const st=String(r['สถานที่']||'');
   const pn=String(r['หมายเลข']||'');
-  // set station
   document.getElementById('f-station').value=st;
   onStationChange();
   setTimeout(()=>{
     document.getElementById('f-pump').value=pn;
     onPumpChange();
-  },100);
 
-  document.getElementById('f-date').value=String(r['วันที่']||'').slice(0,10);
-  document.getElementById('f-beforeafter').value=r['Before or After']||'Before';
-  document.getElementById('f-remark').value=r['หมายเหตุ']||'';
+    document.getElementById('f-date').value=String(r['วันที่']||'').slice(0,10);
+    document.getElementById('f-beforeafter').value=r['Before or After']||'Before';
+    document.getElementById('f-remark').value=r['หมายเหตุ']||'';
 
-  // clearance
-  const fields=['end_a_0','end_a_90','end_a_180','end_a_270',
-    'end_b_0','end_b_90','end_b_180','end_b_270',
-    'coupling_a_0','coupling_a_90','coupling_a_180','coupling_a_270',
-    'coupling_b_0','coupling_b_90','coupling_b_180','coupling_b_270'];
-  const keys=['End_a_0','End_a_90','End_a_180','End_a_270',
-    'End_b_0','End_b_90','End_b_180','End_b_270',
-    'Coupling_a_0','Coupling_a_90','Coupling_a_180','Coupling_a_270',
-    'Coupling_b_0','Coupling_b_90','Coupling_b_180','Coupling_b_270'];
-  fields.forEach((f,i)=>{
-    const el=document.getElementById(f);
-    if(el) el.value=r[keys[i]]||'';
-  });
+    // clearance values
+    const fields=['end_a_0','end_a_90','end_a_180','end_a_270',
+      'end_b_0','end_b_90','end_b_180','end_b_270',
+      'coupling_a_0','coupling_a_90','coupling_a_180','coupling_a_270',
+      'coupling_b_0','coupling_b_90','coupling_b_180','coupling_b_270'];
+    const keys=['End_a_0','End_a_90','End_a_180','End_a_270',
+      'End_b_0','End_b_90','End_b_180','End_b_270',
+      'Coupling_a_0','Coupling_a_90','Coupling_a_180','Coupling_a_270',
+      'Coupling_b_0','Coupling_b_90','Coupling_b_180','Coupling_b_270'];
+    fields.forEach((f,i)=>{
+      const el=document.getElementById(f);
+      if(el) el.value=r[keys[i]]||'';
+    });
 
-  // judgement
-  const jd=r['สรุปผล']||'';
-  document.querySelectorAll('input[name="judge"]').forEach(radio=>{
-    radio.checked=(radio.value===jd);
-  });
+    // judgement
+    const jd=r['สรุปผล']||'';
+    document.querySelectorAll('input[name="judge"]').forEach(radio=>{
+      radio.checked=(radio.value===jd);
+    });
 
-  // approval — match by name
-  const aprName=String(r['ผู้อนุมัติ']||'');
-  const aprEl=document.getElementById('f-approval');
-  [...aprEl.options].forEach(o=>{
-    if(censorName(o.text)===censorName(aprName)||o.text===aprName) aprEl.value=o.value;
-  });
+    // approval
+    const aprName=String(r['ผู้อนุมัติ']||'');
+    const aprEl=document.getElementById('f-approval');
+    [...aprEl.options].forEach(o=>{
+      if(o.text===aprName||censorName(o.text)===censorName(aprName)) aprEl.value=o.value;
+    });
 
-  document.getElementById('btn-edit').style.display='inline-flex';
-  lockForm(editDocNo);
-  setTimeout(rechkAll,200);
+    rechkAll();
+
+    // lock ฟอร์ม + แสดงปุ่มแก้ไข
+    lockForm(editDocNo);
+    setFormStatus('&#128269; โหลดข้อมูล <strong>'+editDocNo+'</strong> แล้ว — กด "แก้ไขข้อมูล" เพื่อแก้ไข','teal');
+    document.getElementById('docno-box').textContent=editDocNo;
+  }, 150);
 }
 
 function clearForm() {
@@ -933,8 +978,8 @@ function clearForm() {
   updateDocNo();
 }
 
-async function loadAllRecords() {
-  if(allRecords.length) return;
+async function loadAllRecords(force=false) {
+  if(!force && allRecords.length) return;
   try {
     const res=await apiFetch('read');
     allRecords=res.data||[];

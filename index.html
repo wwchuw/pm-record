@@ -327,6 +327,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <button class="btn btn-outline" onclick="searchRecord()" style="flex-shrink:0;margin-bottom:1px">&#128269; ค้นหา</button>
       <button class="btn btn-outline" onclick="clearForm()" style="flex-shrink:0;margin-bottom:1px">&#10005; ล้างฟอร์ม</button>
     </div>
+    <!-- Date range filter -->
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--blue4)">
+      <span style="font-size:11px;font-weight:700;color:var(--blue2);letter-spacing:.05em;text-transform:uppercase">&#128197; ช่วงวันที่</span>
+      <span style="font-size:12px;color:var(--text3)">ตั้งแต่</span>
+      <input type="date" id="s-from" style="background:#fff;border:1px solid var(--blue4);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text);outline:none">
+      <span style="font-size:12px;color:var(--text3)">ถึง</span>
+      <input type="date" id="s-to" style="background:#fff;border:1px solid var(--blue4);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text);outline:none">
+      <button class="btn btn-outline" onclick="clearSearchDate()" style="padding:6px 10px;font-size:11px">&#10005; ล้างวันที่</button>
+      <span id="s-date-label" style="font-size:11px;color:var(--teal);font-weight:600"></span>
+    </div>
     <div id="search-status" style="margin-top:8px;font-size:12px;min-height:16px"></div>
   </div>
 
@@ -839,15 +849,36 @@ function setFormStatus(html,color){
   el.style.color=color==='green'?'var(--green)':color==='teal'?'var(--teal)':'var(--red)';
 }
 
+function clearSearchDate() {
+  document.getElementById('s-from').value='';
+  document.getElementById('s-to').value='';
+  document.getElementById('s-date-label').textContent='';
+}
+
 // ── SEARCH RECORD ──
 async function searchRecord() {
   const docno  = document.getElementById('s-docno').value.trim();
   const st     = document.getElementById('s-station').value;
   const pn     = document.getElementById('s-pump').value;
+  const from   = document.getElementById('s-from').value;
+  const to     = document.getElementById('s-to').value;
   const status = document.getElementById('search-status');
+  const lbl    = document.getElementById('s-date-label');
+
+  // update date label
+  if(lbl){
+    if(from||to){
+      const fmt=d=>new Date(d).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+      lbl.textContent = from&&to?'📅 '+fmt(from)+' — '+fmt(to)
+        :from?'📅 ตั้งแต่ '+fmt(from):'📅 ถึง '+fmt(to);
+    } else { lbl.textContent=''; }
+  }
+
+  const fromTs = from ? new Date(from).setHours(0,0,0,0) : null;
+  const toTs   = to   ? new Date(to).setHours(23,59,59,999) : null;
 
   status.textContent='กำลังค้นหา...'; status.style.color='var(--text3)';
-  await loadAllRecords(true); // force reload
+  await loadAllRecords(true);
 
   // ค้นหาจากเลขที่เอกสาร
   if(docno) {
@@ -861,10 +892,26 @@ async function searchRecord() {
 
   // ค้นหาจาก station + pump
   if(st && pn) {
-    const matches = allRecords.filter(r=>
+    let matches = allRecords.filter(r=>
       r['สถานที่']===st && String(r['หมายเลข'])===String(pn)
     );
-    if(!matches.length){status.innerHTML='&#10060; ไม่พบข้อมูลของเครื่องนี้';status.style.color='var(--red)';return;}
+
+    // กรองด้วยช่วงวันที่ถ้ามี
+    if(fromTs||toTs){
+      matches=matches.filter(r=>{
+        const d=parseRecordDate(r);
+        if(!d) return false;
+        const ts=d.getTime();
+        if(fromTs && ts<fromTs) return false;
+        if(toTs   && ts>toTs)   return false;
+        return true;
+      });
+    }
+
+    if(!matches.length){
+      status.innerHTML='&#10060; ไม่พบข้อมูล'+(fromTs||toTs?' ในช่วงวันที่ที่เลือก':'ของเครื่องนี้');
+      status.style.color='var(--red)'; return;
+    }
 
     if(matches.length===1) {
       fillForm(matches[0]);
@@ -881,7 +928,10 @@ async function searchRecord() {
       const jcl=jd==='Acceptable'?'b-ok':jd==='Not Acceptable'?'b-ng':'b-st';
       const ba=r['Before or After']||'—';
       const bcl=ba==='Before'?'b-bef':ba==='After'?'b-aft':'';
-      return '<div onclick="selectSearchResult(\''+r['เลขที่เอกสาร']+'\')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:#fff;transition:background .15s" onmouseover="this.style.background=\'var(--blue3)\'" onmouseout="this.style.background=\'#fff\'">'
+      return '<div onclick="selectSearchResult(\''+r['เลขที่เอกสาร']+'\')" '
+        +'style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);'
+        +'border-radius:8px;cursor:pointer;background:#fff;transition:background .15s" '
+        +'onmouseover="this.style.background=\'var(--blue3)\'" onmouseout="this.style.background=\'#fff\'">'
         +'<span style="font-family:var(--mono);font-size:12px;color:var(--blue2);font-weight:600;flex:1">'+r['เลขที่เอกสาร']+'</span>'
         +'<span style="font-size:11px;color:var(--text3)">'+dt+'</span>'
         +'<span class="badge '+bcl+'" style="flex-shrink:0">'+ba+'</span>'

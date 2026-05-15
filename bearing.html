@@ -522,14 +522,22 @@ function onPumpChange() {
   updateDocNo();
 }
 
-async function loadApprovals() {
-  try {
-    const res=await apiFetch('approval');
-    approvalData=res.data||[];
+async function loadApprovals(){
+  try{
+    const cached = sessionStorage.getItem('approval_cache');
+    if(cached){
+      approvalData=JSON.parse(cached);
+    } else {
+      const res=await fetch(GAS_URL+'?action=approval&_='+Date.now());
+      const json=await res.json();
+      approvalData=json.data||[];
+      sessionStorage.setItem('approval_cache', JSON.stringify(approvalData));
+    }
     const sel=document.getElementById('f-approval');
     sel.innerHTML='<option value="">— เลือก —</option>';
     approvalData.forEach(a=>sel.innerHTML+='<option value="'+a['EmID']+'">'+censorName(a['Approval_Name'])+'</option>');
-  } catch(e) {}
+  }catch(e){}
+}
 }
 function onApprovalChange() {
   const id=document.getElementById('f-approval').value;

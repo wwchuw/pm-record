@@ -468,7 +468,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 // ============================================================
 //  CONFIG
 // ============================================================
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwIJpXkyfmMN0EV7GNphW0k51IP2nIURuIt1Zfiro9zaD3AvW_JPk-cvDPEbn_7kXXj5Q/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwHvyq4so6m57S2YpWPVucKHlNlH8TsVgFigNjn1YLeR6a6RIJNFjQZr-THLscq6nQdIA/exec';
 const RW_SHEET_ID = '1hdYlnqnmfblDsq2hi-ntla3RErgbTEzkaGdE6--A_-M';
 const SHEET_NAME = 'PACKING_SLEEVE_RECORD';
 const PAGE_SIZE = 20;
@@ -491,7 +491,7 @@ const COLS = [
   {k:'วันที่',l:'วันที่'},
   {k:'สถานที่',l:'สถานที่'},
   {k:'หมายเลข',l:'เครื่อง'},
-  {k:'Before or After',l:'B/A'},
+  {k:'Before_or_After',l:'B/A'},
   {k:'Limit_Depth_PackingRW',l:'Limit'},
   {k:'Dist_OA',l:'OA'},{k:'Dist_OB',l:'OB'},{k:'Dist_OC',l:'OC'},
   {k:'Dist_O_D',l:"O'D"},{k:'Dist_O_E',l:"O'E"},{k:'Dist_O_F',l:"O'F"},
@@ -561,7 +561,7 @@ function buildSearchStation(){
     const pumps=equipData.filter(e=>e['สถานที่']===st);
     const ps=document.getElementById('s-pump');
     ps.innerHTML='<option value="">— เลือก —</option>';
-    pumps.forEach(p=>ps.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['Name']+'</option>');
+    pumps.forEach(p=>ps.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['ชื่ออุปกรณ์']+'</option>');
   };
 }
 
@@ -570,7 +570,7 @@ function onStationChange(){
   const pumps=equipData.filter(e=>e['สถานที่']===st);
   const sel=document.getElementById('f-pump');
   sel.innerHTML='<option value="">— เลือกเครื่อง —</option>';
-  pumps.forEach(p=>sel.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['Name']+' (Limit: '+p['Limit_Depth_PackingRW']+' mm)</option>');
+  pumps.forEach(p=>sel.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['ชื่ออุปกรณ์']+' (Limit: '+p['Limit_Depth_PackingRW']+' mm)</option>');
   selectedEquip=null;
   document.getElementById('f-limit').value='';
   document.getElementById('f-footer').value='';
@@ -773,7 +773,7 @@ async function searchRecord(){
     const listHtml=matches.map(r=>{
       const dt=r['วันที่']?new Date(r['วันที่']).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'}):'—';
       const jd=r['สรุปผล']||'—';const jcl=jd==='Acceptable'?'b-ok':jd==='Not Acceptable'?'b-ng':'b-st';
-      const ba=r['Before or After']||'—';const bcl=ba==='Before'?'b-bef':ba==='After'?'b-aft':'';
+      const ba=r['Before_or_After']||'—';const bcl=ba==='Before'?'b-bef':ba==='After'?'b-aft':'';
       return'<div onclick="selectSearchResult(\''+r['เลขที่เอกสาร']+'\')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:#fff;transition:background .15s" onmouseover="this.style.background=\'var(--accent2)\'" onmouseout="this.style.background=\'#fff\'">'
         +'<span style="font-family:var(--mono);font-size:12px;color:var(--accent4);font-weight:600;flex:1">'+r['เลขที่เอกสาร']+'</span>'
         +'<span style="font-size:11px;color:var(--text3)">'+dt+'</span>'
@@ -801,7 +801,7 @@ function fillForm(r){
   setTimeout(()=>{
     document.getElementById('f-pump').value=pn;onPumpChange();
     document.getElementById('f-date').value=String(r['วันที่']||'').slice(0,10);
-    document.getElementById('f-beforeafter').value=r['Before or After']||'Before';
+    document.getElementById('f-beforeafter').value=r['Before_or_After']||'Before';
     document.getElementById('f-remark').value=r['หมายเหตุ']||'';
     const distKeys=[['dist_oa','Dist_OA'],['dist_ob','Dist_OB'],['dist_oc','Dist_OC'],
       ['dist_od','Dist_O_D'],['dist_oe','Dist_O_E'],['dist_of','Dist_O_F'],
@@ -861,7 +861,7 @@ async function generatePDF(fd){
   const tx=(t,x,yy,o)=>{o=o||{};doc.setFontSize(o.size||9);doc.setFont('helvetica',o.bold?'bold':'normal');doc.setTextColor(...(o.color||[30,30,30]));doc.text(String(t||''),x,yy,{align:o.align||'left'});};
   const bx=(x,yy,w,h,fill)=>{if(fill){doc.setFillColor(...fill);doc.rect(x,yy,w,h,'F');}doc.setDrawColor(180,180,180);doc.rect(x,yy,w,h,'S');};
   doc.setFillColor(15,110,86);doc.rect(M,y,W-M*2,10,'F');
-  tx('Packing Sleeve Record',W/2,y+7,{size:12,bold:true,color:[255,255,255],align:'center'});y+=14;
+  tx('Packing Sleeve Record (Raw Water)',W/2,y+7,{size:12,bold:true,color:[255,255,255],align:'center'});y+=14;
   tx('Station :',M,y+4,{size:9,bold:true});bx(M+18,y,35,6);tx(fd.station||'',M+20,y+4.5,{size:9});
   tx('Date :',M+60,y+4,{size:9,bold:true});bx(M+73,y,35,6);tx(fd.date||'',M+75,y+4.5,{size:9});
   tx('Doc No. :',M+115,y+4,{size:9,bold:true});bx(M+130,y,48,6);tx(fd.docNo||'',M+132,y+4.5,{size:7.5,color:[15,110,86]});y+=10;
@@ -904,7 +904,8 @@ async function generatePDF(fd){
 // ── DASHBOARD ──
 async function loadDashboard(){
   try{
-    const res=await fetch(GAS_URL+'?action=read_packingRW&sheetId='+RW_SHEET_ID+'&_='+Date.now());const jsonD=await res.json();
+    const res=await fetch(GAS_URL+'?action=read_packingRW&sheetId='+RW_SHEET_ID+'&_='+Date.now());
+  const jsonD=await res.json();
     allRecords=jsonD.data||[];filteredRec=[...allRecords];
     const stations=[...new Set(allRecords.map(r=>r['สถานที่']))].filter(Boolean).sort();
     const ssel=document.getElementById('d-st');const cur=ssel.value;
@@ -918,8 +919,8 @@ function renderKPIs(){
   const total=allRecords.length;
   const ok=allRecords.filter(r=>r['สรุปผล']==='Acceptable').length;
   const ng=allRecords.filter(r=>r['สรุปผล']==='Not Acceptable').length;
-  const bef=allRecords.filter(r=>r['Before or After']==='Before').length;
-  const aft=allRecords.filter(r=>r['Before or After']==='After').length;
+  const bef=allRecords.filter(r=>r['Before_or_After']==='Before').length;
+  const aft=allRecords.filter(r=>r['Before_or_After']==='After').length;
   document.getElementById('kpi-grid').innerHTML=
     kpi(total,'ทั้งหมด','var(--blue)')+kpi(ok,'Acceptable','var(--green)')+
     kpi(ng,'Not Acceptable','var(--red)')+kpi(bef,'Before','var(--amber)')+kpi(aft,'After','var(--teal)');
@@ -947,7 +948,7 @@ function filterDash(){
   if(lbl){if(from||to){const fmt=d=>new Date(d).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});lbl.textContent=from&&to?'📅 '+fmt(from)+' — '+fmt(to):from?'📅 ตั้งแต่ '+fmt(from):'📅 ถึง '+fmt(to);}else lbl.textContent='';}
   filteredRec=allRecords.filter(r=>{
     if(st&&r['สถานที่']!==st)return false;
-    if(ba&&r['Before or After']!==ba)return false;
+    if(ba&&r['Before_or_After']!==ba)return false;
     if(jd&&r['สรุปผล']!==jd)return false;
     if(fromTs||toTs){const d=parseRecordDate(r);if(!d)return false;const ts=d.getTime();if(fromTs&&ts<fromTs)return false;if(toTs&&ts>toTs)return false;}
     if(q){const hay=COLS.map(c=>String(r[c.k]||'')).join(' ').toLowerCase();if(!hay.includes(q))return false;}
@@ -973,7 +974,7 @@ function renderTable(){
   const lim_key='Limit_Depth_PackingRW';
   document.getElementById('dtbl-body').innerHTML=slice.map(r=>{
     const lim=parseFloat(r[lim_key])||9999;
-    const ba=r['Before or After']||'—';const jd=r['สรุปผล']||'—';
+    const ba=r['Before_or_After']||'—';const jd=r['สรุปผล']||'—';
     const jcl=jd==='Acceptable'?'b-ok':jd==='Not Acceptable'?'b-ng':'b-st';
     const bcl=ba==='Before'?'b-bef':ba==='After'?'b-aft':'';
     const pdfUrl=r['ReportFile_PackingRW']||'';

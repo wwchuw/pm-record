@@ -311,13 +311,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           <tbody>
             <tr>
               <td class="row-lbl">Vertical</td>
-              <td><input class="ai" type="number" step="0.001" id="bv_ang" oninput="chkLimit(this,'ang')"></td>
-              <td><input class="ai" type="number" step="0.001" id="bv_off" oninput="chkLimit(this,'off')"></td>
+              <td><input class="ai" type="number" step="0.001" id="bv_ang" oninput="chkLimit(this,'ang');if(document.getElementById('copy-check').checked)doCopy()"></td>
+              <td><input class="ai" type="number" step="0.001" id="bv_off" oninput="chkLimit(this,'off');if(document.getElementById('copy-check').checked)doCopy()"></td>
             </tr>
             <tr>
               <td class="row-lbl">Horizontal</td>
-              <td><input class="ai" type="number" step="0.001" id="bh_ang" oninput="chkLimit(this,'ang')"></td>
-              <td><input class="ai" type="number" step="0.001" id="bh_off" oninput="chkLimit(this,'off')"></td>
+              <td><input class="ai" type="number" step="0.001" id="bh_ang" oninput="chkLimit(this,'ang');if(document.getElementById('copy-check').checked)doCopy()"></td>
+              <td><input class="ai" type="number" step="0.001" id="bh_off" oninput="chkLimit(this,'off');if(document.getElementById('copy-check').checked)doCopy()"></td>
             </tr>
           </tbody>
         </table>
@@ -598,8 +598,6 @@ function chkLimit(inp, type) {
   const lim = parseFloat(type==='ang' ? selectedEquip['Limit_Angular'] : selectedEquip['Limit_Offset']);
   const val = parseFloat(inp.value);
   inp.classList.toggle('over', !isNaN(val)&&!isNaN(lim)&&Math.abs(val)>lim);
-  // copy if checked
-  if(document.getElementById('copy-check').checked) doCopy();
 }
 function rechkAll() {
   ['bv_ang','bh_ang','av_ang','ah_ang'].forEach(id=>chkLimit(document.getElementById(id),'ang'));
@@ -610,14 +608,13 @@ function rechkAll() {
 function toggleCopy() {
   const cb = document.getElementById('copy-check');
   cb.checked = !cb.checked;
-  doCopy();
+  if(cb.checked) doCopy();
 }
 function doCopy() {
-  if(!document.getElementById('copy-check').checked) return;
   ['v_ang','v_off','h_ang','h_off'].forEach(k=>{
     const bEl=document.getElementById('b'+k);
     const aEl=document.getElementById('a'+k);
-    if(bEl&&aEl) { aEl.value=bEl.value; chkLimit(aEl, k.includes('ang')?'ang':'off'); }
+    if(bEl&&aEl){aEl.value=bEl.value;chkLimit(aEl,k.includes('ang')?'ang':'off');}
   });
 }
 

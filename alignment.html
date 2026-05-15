@@ -325,9 +325,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
 
     <!-- COPY CHECKBOX -->
-    <div class="copy-row" onclick="toggleCopy()">
-      <input type="checkbox" id="copy-check" onchange="doCopy()">
-      <label for="copy-check">&#128260; Copy Before → After อัตโนมัติ</label>
+    <div class="copy-row">
+      <input type="checkbox" id="copy-check" onchange="if(this.checked)doCopy()">
+      <label for="copy-check" style="cursor:pointer">&#128260; Copy Before → After อัตโนมัติ</label>
     </div>
 
     <!-- AFTER -->

@@ -556,7 +556,7 @@ function buildSearchStation() {
     const pumps=equipData.filter(e=>e['สถานที่']===st);
     const ps=document.getElementById('s-pump');
     ps.innerHTML='<option value="">— เลือก —</option>';
-    pumps.forEach(p=>ps.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['Name']+'</option>');
+    pumps.forEach(p=>ps.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['ชื่ออุปกรณ์']+'</option>');
   };
 }
 
@@ -565,7 +565,7 @@ function onStationChange() {
   const pumps=equipData.filter(e=>e['สถานที่']===st);
   const sel=document.getElementById('f-pump');
   sel.innerHTML='<option value="">— เลือกเครื่อง —</option>';
-  pumps.forEach(p=>sel.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['Name']+'</option>');
+  pumps.forEach(p=>sel.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['ชื่ออุปกรณ์']+'</option>');
   selectedEquip=null;
   document.getElementById('f-limit-ang').value='';
   document.getElementById('f-limit-off').value='';
@@ -664,7 +664,7 @@ function collectForm() {
     sheetId:        ALI_SHEET_ID,
     station:        document.getElementById('f-station').value,
     pump_no:        document.getElementById('f-pump').value,
-    equip_name:     selectedEquip?(selectedEquip['Name']||''):'',
+    equip_name:     selectedEquip?(selectedEquip['อุปกรณ์']||''):'',
     date:           document.getElementById('f-date').value,
     footer:         selectedEquip?(selectedEquip['Footer_Ali']||''):'',
     limit_angular:  selectedEquip?(selectedEquip['Limit_Angular']||''):'',

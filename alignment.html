@@ -556,7 +556,7 @@ function buildSearchStation() {
     const pumps=equipData.filter(e=>e['สถานที่']===st);
     const ps=document.getElementById('s-pump');
     ps.innerHTML='<option value="">— เลือก —</option>';
-    pumps.forEach(p=>ps.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['ชื่ออุปกรณ์']+'</option>');
+    pumps.forEach(p=>ps.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['Name']+'</option>');
   };
 }
 
@@ -565,7 +565,7 @@ function onStationChange() {
   const pumps=equipData.filter(e=>e['สถานที่']===st);
   const sel=document.getElementById('f-pump');
   sel.innerHTML='<option value="">— เลือกเครื่อง —</option>';
-  pumps.forEach(p=>sel.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['ชื่ออุปกรณ์']+'</option>');
+  pumps.forEach(p=>sel.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['Name']+'</option>');
   selectedEquip=null;
   document.getElementById('f-limit-ang').value='';
   document.getElementById('f-limit-off').value='';

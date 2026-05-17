@@ -536,7 +536,7 @@ async function init() {
 // ── EQUIPMENT (from Alignment DB) ──
 async function loadEquipment() {
   try {
-    const res = await fetch(GAS_URL+'?action=equip&_='+Date.now());
+    const res = await fetch(GAS_URL+'?action=equip_ali&sheetId='+ALI_SHEET_ID+'&_='+Date.now());
     const json = await res.json();
     equipData = json.data||[];
     const stations = [...new Set(equipData.map(e=>e['สถานที่']))].sort();
@@ -556,7 +556,7 @@ function buildSearchStation() {
     const pumps=equipData.filter(e=>e['สถานที่']===st);
     const ps=document.getElementById('s-pump');
     ps.innerHTML='<option value="">— เลือก —</option>';
-    pumps.forEach(p=>ps.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['Name']+'</option>');
+    pumps.forEach(p=>ps.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['ชื่ออุปกรณ์']+'</option>');
   };
 }
 
@@ -565,7 +565,7 @@ function onStationChange() {
   const pumps=equipData.filter(e=>e['สถานที่']===st);
   const sel=document.getElementById('f-pump');
   sel.innerHTML='<option value="">— เลือกเครื่อง —</option>';
-  pumps.forEach(p=>sel.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['Name']+'</option>');
+  pumps.forEach(p=>sel.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['ชื่ออุปกรณ์']+'</option>');
   selectedEquip=null;
   document.getElementById('f-limit-ang').value='';
   document.getElementById('f-limit-off').value='';
@@ -580,7 +580,7 @@ function onPumpChange() {
   if(selectedEquip){
     document.getElementById('f-limit-ang').value=(selectedEquip['Limit_Angular']||'—')+' mm';
     document.getElementById('f-limit-off').value=(selectedEquip['Limit_Offset']||'—')+' mm';
-    document.getElementById('f-footer').value=selectedEquip['Footer_Ali']||'';
+    document.getElementById('f-footer').value=selectedEquip['Footer_Align']||'';
     rechkAll();
   }
   document.getElementById('btn-edit').style.display='none';

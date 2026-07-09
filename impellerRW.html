@@ -310,7 +310,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <div class="toast" id="toast"></div>
 
 <script>
-const GAS_URL    = 'https://script.google.com/macros/s/AKfycbwE91RF9C2KTKBcQLdxADJ-iSrOgq3Uo9QKYJ3r-T4LDO28tuwAAJFkRqmqW7RAUzld/exec';
+const GAS_URL    = 'https://script.google.com/macros/s/AKfycbzl-R7yOFWmxdYKaML4igvDYPPURqO8nQLxfkx9YLp63zdgsAeKq8teyWVqlff5NyBx/exec';
 const RW_SHEET_ID = '1hdYlnqnmfblDsq2hi-ntla3RErgbTEzkaGdE6--A_-M';
 const PAGE_SIZE  = 20;
 const POSITIONS  = ['A','B','C','D','E'];
@@ -579,7 +579,7 @@ function clearForm(){
 
 async function loadAllRecords(force=false){
   if(!force&&allRecords.length)return;
-  try{const res=await fetch(GAS_URL+'?action=read_impellerRW&sheetId='+RW_SHEET_ID+'&_='+Date.now());const json=await res.json();allRecords=json.data||[];}catch(e){}
+  try{const res=await fetch(GAS_URL+'?action=read_impellerrw&sheetId='+RW_SHEET_ID+'&_='+Date.now());const json=await res.json();allRecords=json.data||[];}catch(e){}
 }
 function parseRecordDate(r){const v=r['วันที่'];if(!v)return null;const d=new Date(String(v).trim());return isNaN(d)?null:d;}
 
@@ -638,7 +638,7 @@ async function generatePDF(fd){
 
 async function loadDashboard(){
   try{
-    const res=await fetch(GAS_URL+'?action=read_impellerRW&sheetId='+RW_SHEET_ID+'&_='+Date.now());
+    const res=await fetch(GAS_URL+'?action=read_impellerrw&sheetId='+RW_SHEET_ID+'&_='+Date.now());
     const json=await res.json();allRecords=json.data||[];filteredRec=[...allRecords];
     const stations=[...new Set(allRecords.map(r=>r['สถานที่']))].filter(Boolean).sort();
     const ssel=document.getElementById('d-st');const cur=ssel.value;

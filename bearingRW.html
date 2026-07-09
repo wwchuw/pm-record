@@ -493,7 +493,7 @@ function buildSearchStation() {
     const pumps=filtered.filter(e=>e['สถานที่']===st);
     const ps=document.getElementById('s-pump');
     ps.innerHTML='<option value="">— เลือก —</option>';
-    pumps.forEach(p=>ps.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['Name']+'</option>');
+    pumps.forEach(p=>ps.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['ชื่ออุปกรณ์']+'</option>');
   };
 }
 
@@ -502,7 +502,7 @@ function onStationChange() {
   const filtered=equipData.filter(e=>e['สถานที่']===st&&e['Limit_Gap_Submerge']&&e['Limit_Gap_Submerge']!=='NA');
   const sel=document.getElementById('f-pump');
   sel.innerHTML='<option value="">— เลือกเครื่อง —</option>';
-  filtered.forEach(p=>sel.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['Name']+' (Limit: '+p['Limit_Gap_Submerge']+' mm)</option>');
+  filtered.forEach(p=>sel.innerHTML+='<option value="'+p['หมายเลข']+'">'+p['ชื่ออุปกรณ์']+' (Limit: '+p['Limit_Gap_Submerge']+' mm)</option>');
   selectedEquip=null;
   document.getElementById('f-limit').value='';
   document.getElementById('f-footer').value='';

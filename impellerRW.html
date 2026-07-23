@@ -437,11 +437,11 @@ function calcAvg(){
 function lockForm(docNo){
   editMode=true;editDocNo=docNo;document.getElementById('docno-box').textContent=docNo;
   FORM_FIELD_IDS.forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=true;});
-  document.getElementById('btn-save').disabled=true;document.getElementById('btn-save-pdf').disabled=false;document.getElementById('btn-edit').style.display='inline-flex';
+  document.getElementById('btn-save').disabled=true;const _bsp=document.getElementById('btn-save-pdf');if(_bsp)_bsp.disabled=false;document.getElementById('btn-edit').style.display='inline-flex';
 }
 function unlockForm(){
   FORM_FIELD_IDS.forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=false;});
-  document.getElementById('btn-save').disabled=false;document.getElementById('btn-save-pdf').disabled=false;
+  document.getElementById('btn-save').disabled=false;const _bsp=document.getElementById('btn-save-pdf');if(_bsp)_bsp.disabled=false;
   setFormStatus('&#9998; โหมดแก้ไข — กดบันทึกเพื่อบันทึกทับ','amber');
 }
 
@@ -497,18 +497,18 @@ async function saveAndPDF(){
     const fd=collectForm();let docNo=editDocNo;
     if(!editMode){fd.action='save_impellerRW';const res=await apiPost(fd);if(res.status!=='ok'){toast(res.message||'บันทึกไม่สำเร็จ','e');return;}docNo=res.docNo;lockForm(docNo);toast('บันทึกสำเร็จ เลขที่: '+docNo,'s');}
     else{fd.action='save_impellerRW_update';fd.docNo=docNo;const res=await apiPost(fd);if(res.status!=='ok'){toast(res.message||'อัพเดตไม่สำเร็จ','e');return;}}
-    document.getElementById('btn-save-pdf').textContent='กำลังสร้าง PDF...';
+    const _bsp3=document.getElementById('btn-save-pdf');if(_bsp3)_bsp3.textContent='กำลังสร้าง PDF...';
     const pdfDoc=await generatePDF(Object.assign({},fd,{docNo}));
-    document.getElementById('btn-save-pdf').textContent='กำลังอัพโหลด Drive...';
+    const _bsp4=document.getElementById('btn-save-pdf');if(_bsp4)_bsp4.textContent='กำลังอัพโหลด Drive...';
     const b64=pdfDoc.output('datauristring').split(',')[1];
     const dr=await apiPost({action:'save_impellerRW_pdf',emId:currentUser.emId,password:currentUser?.password||'',docNo,pdfBase64:b64,sheetId:RW_SHEET_ID});
     if(dr.status==='ok'){toast('PDF อัพโหลด Drive สำเร็จ','s');setFormStatus('&#9989; บันทึก + PDF แล้ว เลขที่: '+docNo+' — <a href="'+dr.fileUrl+'" target="_blank" style="color:var(--teal)">เปิด PDF</a>','green');}
     else toast('PDF Drive: '+dr.message,'e');
   }catch(e){toast('เชื่อมต่อ Server ไม่สำเร็จ','e');}
-  finally{document.getElementById('btn-save-pdf').textContent='บันทึก + สร้าง PDF';document.getElementById('btn-save-pdf').disabled=false;}
+  finally{const _bsp5=document.getElementById('btn-save-pdf');if(_bsp5)_bsp5.textContent='บันทึก + สร้าง PDF';const _bsp=document.getElementById('btn-save-pdf');if(_bsp)_bsp.disabled=false;}
 }
 
-function setBtns(dis){['btn-save','btn-save-pdf'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=dis;});}
+function setBtns(dis){['btn-save'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=dis;});}
 function setFormStatus(html,color){const el=document.getElementById('form-status');el.innerHTML=html;el.style.color=color==='green'?'var(--green)':color==='teal'?'var(--teal)':color==='amber'?'var(--amber)':'var(--red)';}
 
 function clearSearchDate(){document.getElementById('s-from').value='';document.getElementById('s-to').value='';document.getElementById('s-date-label').textContent='';}
@@ -573,7 +573,7 @@ function clearForm(){
     const ac=document.getElementById('Avg_'+pos+'_cell');if(ac){ac.textContent='—';ac.classList.remove('over');}});
   const ch=document.querySelector('input[name="judge"]:checked');if(ch)ch.checked=false;
   document.getElementById('docno-box').textContent='—';
-  document.getElementById('btn-save').disabled=false;document.getElementById('btn-save-pdf').disabled=false;document.getElementById('btn-edit').style.display='none';
+  document.getElementById('btn-save').disabled=false;const _bsp=document.getElementById('btn-save-pdf');if(_bsp)_bsp.disabled=false;document.getElementById('btn-edit').style.display='none';
   document.getElementById('form-status').innerHTML='';document.getElementById('search-status').textContent='';
   selectedEquip=null;updateDocNo();
 }

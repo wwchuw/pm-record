@@ -673,7 +673,7 @@ function collectForm() {
     judgement:     document.querySelector('input[name="judge"]:checked')?.value||'',
     remark:        document.getElementById('f-remark').value,
     inspector_name:currentUser?.name||'',
-    approval_name: document.getElementById('f-approval').selectedOptions[0]?.text||'',
+    approval_name: (()=>{const id=document.getElementById('f-approval').value;const a=approvalData.find(x=>String(x['EmID'])===String(id));return a?a['Approval_Name']:'';})(),
     end_a_0:document.getElementById('end_a_0').value||'',
     end_a_90:document.getElementById('end_a_90').value||'',
     end_a_180:document.getElementById('end_a_180').value||'',
